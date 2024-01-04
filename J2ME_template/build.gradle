@@ -1,0 +1,82 @@
+import proguard.gradle.ProGuardTask
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.guardsquare:proguard-gradle:7.1.0'
+    }
+}
+
+plugins {
+    id 'java'
+}
+
+group 'com.example'
+version '1.0.0'
+
+repositories {
+    mavenCentral()
+}
+
+configurations {
+    microemu
+}
+
+dependencies {
+    compileOnly group: 'org.microemu', name: 'microemu-cldc', version: '2.0.4'
+    compileOnly group: 'org.microemu', name: 'microemu-midp', version: '2.0.4'
+    microemu group: 'org.microemu', name: 'microemulator', version: '2.0.4', ext: 'jar'
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_2
+    targetCompatibility = JavaVersion.VERSION_1_1
+}
+
+jar {
+    manifest {
+        attributes(
+                "Manifest-Version": "1.0",
+                "MIDlet-Vendor": gradle.midletCompany,
+                "MIDlet-Version": version,
+                "Nokia-MIDlet-On-Screen-Keypad": "no",
+                "MIDlet-Permissions-Opt": gradle.midletOptionalPermissions,
+                "Nokia-MIDlet-App-Orientation": "portrait",
+                "MIDlet-Name": gradle.midletName,
+                "MIDlet-1": "${gradle.midletName}, ${gradle.midletIcon}, ${gradle.mainClass}",
+                "MicroEdition-Configuration": "CLDC-1.1",
+                "Nokia-MIDlet-Category": "Game",
+                "MIDlet-Icon": gradle.midletIcon,
+                "MicroEdition-Profile": "MIDP-2.0",
+                "MIDlet-Description": gradle.midletDescription,
+                "MIDlet-Permissions": gradle.midletPermissions)
+    }
+}
+
+task obfuscatedJar(type: ProGuardTask) {
+    dependsOn jar
+
+    microedition
+    dontshrink
+    dontoptimize
+    dontobfuscate
+
+    libraryjars sourceSets.main.compileClasspath
+    libraryjars "${System.getProperty('java.home')}/lib/rt.jar"
+
+    injars "${projectDir}/build/libs/${jar.archiveFileName.get()}"
+    outjars "${projectDir}/build/distribution/${jar.archiveFileName.get()}"
+}
+
+build.dependsOn obfuscatedJar
+
+task runMidlet(type:JavaExec) {
+    dependsOn jar
+    main = "org.microemu.app.Main"
+    classpath configurations.microemu
+    args = [
+            "${projectDir}/build/libs/${jar.archiveFileName.get()}"
+    ]
+}

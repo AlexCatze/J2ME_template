@@ -1,0 +1,10 @@
+rootProject.name = 'J2ME_template'
+
+gradle.ext.midletName = 'Example Midlet'
+gradle.ext.midletDescription = 'Example Midlet'
+gradle.ext.midletCompany = 'Example Company'
+gradle.ext.midletIcon = "icon.png"
+gradle.ext.midletPermissions = ""
+gradle.ext.midletOptionalPermissions = ""
+
+gradle.ext.mainClass = "com.example.Main"
